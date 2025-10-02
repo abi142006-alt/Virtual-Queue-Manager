@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Admin - QueueManager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Setup Admin Account & Database</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="setupForm">
+                            <div class="mb-3">
+                                <label class="form-label">Admin Email</label>
+                                <input type="email" class="form-control" id="adminEmail" value="admin@queuemanager.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Password</label>
+                                <input type="password" class="form-control" id="adminPassword" value="admin123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Name</label>
+                                <input type="text" class="form-control" id="adminName" value="System Administrator">
+                            </div>
+                            <button class="btn btn-primary w-100" onclick="setupAdminAndDatabase()">Setup Admin & Database</button>
+                        </div>
+                        <div id="setupStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXvjL_U0g_U5hF8XcIWLpkwyh1PWMx03o",
+            authDomain: "virtual-queue-manager.firebaseapp.com",
+            projectId: "virtual-queue-manager",
+            storageBucket: "virtual-queue-manager.firebasestorage.app",
+            messagingSenderId: "50053786489",
+            appId: "1:50053786489:web:3dff3072decd2f174fdda8"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        async function setupAdminAndDatabase() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const name = document.getElementById('adminName').value;
+            const statusDiv = document.getElementById('setupStatus');
+            
+            statusDiv.innerHTML = '<div class="alert alert-info">Starting setup process...</div>';
+
+            try {
+                // Step 1: Create admin user in Firebase Auth
+                statusDiv.innerHTML = '<div class="alert alert-info">Creating admin user in Authentication...</div>';
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Step 2: Create admin document in Firestore
+                statusDiv.innerHTML = '<div class="alert alert-info">Creating admin profile in database...</div>';
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isActive: true,
+                    lastLogin: null
+                });
+
+                // Step 3: Create sample locations
+                statusDiv.innerHTML = '<div class="alert alert-info">Creating sample locations...</div>';
+                await createSampleLocations();
+
+                // Step 4: Sign out and show success
+                await auth.signOut();
+                
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h5>✅ Setup Completed Successfully!</h5>
+                        <p><strong>Admin Account Created:</strong></p>
+                        <ul>
+                            <li>Email: ${email}</li>
+                            <li>Password: ${password}</li>
+                            <li>Role: Admin</li>
+                        </ul>
+                        <p class="mb-0">You can now login at <a href="admin.html" class="alert-link">admin.html</a></p>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Admin email already exists. Please use a different email or login directly.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please use a stronger password.';
+                }
+                
+                statusDiv.innerHTML = `<div class="alert alert-danger">Setup failed: ${errorMessage}</div>`;
+            }
+        }
+
+        async function createSampleLocations() {
+            const locations = [
+                {
+                    name: "City General Hospital",
+                    category: "hospital",
+                    services: ["Emergency", "Consultation", "Pharmacy", "Lab Tests"],
+                    coords: { latitude: 40.7128, longitude: -74.0060 },
+                    address: "123 Medical Center Dr, New York, NY",
+                    phone: "+1 (555) 123-4567",
+                    hours: "24/7",
+                    isActive: true
+                },
+                {
+                    name: "National Bank Downtown",
+                    category: "bank", 
+                    services: ["Teller Services", "Loan Applications", "Account Opening", "ATM"],
+                    coords: { latitude: 40.7589, longitude: -73.9851 },
+                    address: "456 Financial St, New York, NY",
+                    phone: "+1 (555) 123-4568",
+                    hours: "Mon-Fri 9AM-5PM",
+                    isActive: true
+                },
+                {
+                    name: "Central Community Bank",
+                    category: "bank",
+                    services: ["Teller Services", "Financial Advice", "Mortgage Services"],
+                    coords: { latitude: 40.7505, longitude: -73.9934 },
+                    address: "789 Business Ave, New York, NY",
+                    phone: "+1 (555) 123-4569",
+                    hours: "Mon-Fri 8:30AM-4:30PM",
+                    isActive: true
+                },
+                {
+                    name: "Bean There Café",
+                    category: "cafe",
+                    services: ["Coffee Order", "Food Order", "Pickup"],
+                    coords: { latitude: 40.7282, longitude: -73.9942 },
+                    address: "321 Coffee Lane, New York, NY",
+                    phone: "+1 (555) 123-4570",
+                    hours: "Mon-Sun 7AM-9PM",
+                    isActive: true
+                },
+                {
+                    name: "Metro Medical Center",
+                    category: "hospital",
+                    services: ["General Checkup", "Specialist Consultation", "Vaccination"],
+                    coords: { latitude: 40.7414, longitude: -73.9903 },
+                    address: "654 Health Blvd, New York, NY",
+                    phone: "+1 (555) 123-4571",
+                    hours: "Mon-Fri 8AM-8PM, Sat 9AM-5PM",
+                    isActive: true
+                }
+            ];
+
+            for (const location of locations) {
+                await db.collection('locations').add({
+                    ...location,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    queueCount: 0
+                });
+            }
+        }
+    </script>
+</body>
+</html>
