@@ -146,15 +146,9 @@ function addDemoCredentialsButton() {
     const form = document.getElementById('adminLoginForm');
     const demoButton = document.createElement('button');
     demoButton.type = 'button';
-    demoButton.className = 'btn btn-outline-secondary btn-sm mt-2';
-    demoButton.innerHTML = '<i class="fas fa-magic me-1"></i>Fill Demo Credentials';
-    demoButton.onclick = fillDemoCredentials;
+    
     
     const messageDiv = document.getElementById('loginMessage');
     messageDiv.parentNode.insertBefore(demoButton, messageDiv);
 }
 
-// Initialize demo credentials button if on admin login page
-if (window.location.pathname.includes('admin-login.html')) {
-    document.addEventListener('DOMContentLoaded', addDemoCredentialsButton);
-}
