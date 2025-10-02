@@ -189,7 +189,7 @@ async function loadLocationQueues() {
                 id: servingDoc.id, 
                 ...servingDoc.data() 
             };
-            displayCurrentQueueInfo(currentServingTicket, location);
+            await displayCurrentQueueInfo(currentServingTicket, location); // Added await here
         } else {
             // No one currently being served
             currentServingTicket = null;
@@ -213,7 +213,8 @@ async function loadLocationQueues() {
     }
 }
 
-function displayCurrentQueueInfo(ticket, location) {
+// FIXED: Added async keyword to this function
+async function displayCurrentQueueInfo(ticket, location) {
     if (domElements.currentQueueSection) {
         domElements.currentQueueSection.style.display = 'block';
     }
@@ -223,9 +224,26 @@ function displayCurrentQueueInfo(ticket, location) {
     const waitTime = ticket.createdAt ? 
         Math.round((new Date() - ticket.createdAt.toDate()) / 60000) : 'Unknown';
     
+    let customerInfo = '';
+    if (ticket.customerName) {
+        customerInfo = `<p class="mb-1"><strong>Customer:</strong> ${ticket.customerName}</p>`;
+    } else if (ticket.userId) {
+        // Try to fetch user name if not directly stored
+        try {
+            const userDoc = await db.collection('users').doc(ticket.userId).get(); // This needs await
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                customerInfo = `<p class="mb-1"><strong>Customer:</strong> ${userData.name || 'Unknown'}</p>`;
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
+    
     domElements.currentQueueInfo.innerHTML = `
         <p class="mb-1"><strong>Currently Serving:</strong> ${ticket.service}</p>
         <p class="mb-1"><strong>Ticket ID:</strong> ${ticket.ticketId}</p>
+        ${customerInfo}
         <p class="mb-1"><strong>Customer Wait Time:</strong> ${waitTime} minutes</p>
         <p class="mb-0"><strong>Started Serving:</strong> ${formatDate(new Date())}</p>
     `;
@@ -251,13 +269,36 @@ async function loadWaitingList(locationId) {
             return;
         }
 
-        const tickets = snapshot.docs.map((doc, index) => ({
-            id: doc.id,
-            position: index + 1,
-            ...doc.data()
-        }));
+        // Fetch user details for each ticket if customerName is not available
+        const ticketsWithUserData = await Promise.all(
+            snapshot.docs.map(async (doc, index) => {
+                const ticket = { 
+                    id: doc.id, 
+                    position: index + 1, 
+                    ...doc.data() 
+                };
+                
+                // If customerName is not available but userId exists, fetch user details
+                if (!ticket.customerName && ticket.userId) {
+                    try {
+                        const userDoc = await db.collection('users').doc(ticket.userId).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            ticket.customerName = userData.name || 'Unknown Customer';
+                        }
+                    } catch (error) {
+                        console.error('Error fetching user data:', error);
+                        ticket.customerName = 'Unknown Customer';
+                    }
+                } else if (!ticket.customerName) {
+                    ticket.customerName = 'Walk-in Customer';
+                }
+                
+                return ticket;
+            })
+        );
 
-        waitingList.innerHTML = tickets.map(ticket => `
+        waitingList.innerHTML = ticketsWithUserData.map(ticket => `
             <div class="card mb-2">
                 <div class="card-body py-2">
                     <div class="row align-items-center">
@@ -266,14 +307,15 @@ async function loadWaitingList(locationId) {
                         </div>
                         <div class="col-5">
                             <small class="d-block"><strong>${ticket.service}</strong></small>
-                            <small class="text-muted">${ticket.ticketId}</small>
+                            <small class="d-block text-muted">Ticket: ${ticket.ticketId}</small>
+                            <small class="d-block"><strong>Customer:</strong> ${ticket.customerName}</small>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <small class="text-muted">
                                 Wait: ${Math.round((new Date() - ticket.createdAt.toDate()) / 60000)}min
                             </small>
                         </div>
-                        <div class="col-2">
+                        <div class="col-3">
                             <button class="btn btn-sm btn-outline-primary" 
                                     onclick="serveTicket('${ticket.id}', '${ticket.ticketId}')">
                                 Serve
@@ -339,10 +381,10 @@ async function callNext() {
         
         // Reload queue display
         const locationDoc = await db.collection('locations').doc(currentLocation).get();
-        displayCurrentQueueInfo(currentServingTicket, locationDoc.data());
+        await displayCurrentQueueInfo(currentServingTicket, locationDoc.data());
         await loadWaitingList(currentLocation);
 
-        showToast(`Now serving: ${nextTicket.service} - Ticket ${nextTicket.ticketId}`, 'success');
+        showToast(`Now serving: ${nextTicket.service} - Ticket ${nextTicket.ticketId} - ${nextTicket.customerName || 'Customer'}`, 'success');
 
     } catch (error) {
         console.error('Error calling next ticket:', error);
@@ -385,10 +427,10 @@ async function serveTicket(ticketId, ticketNumber) {
         
         // Reload queue display
         const locationDoc = await db.collection('locations').doc(currentLocation).get();
-        displayCurrentQueueInfo(currentServingTicket, locationDoc.data());
+        await displayCurrentQueueInfo(currentServingTicket, locationDoc.data());
         await loadWaitingList(currentLocation);
 
-        showToast(`Now serving: ${ticket.service} - Ticket ${ticket.ticketId}`, 'success');
+        showToast(`Now serving: ${ticket.service} - Ticket ${ticket.ticketId} - ${ticket.customerName || 'Customer'}`, 'success');
 
     } catch (error) {
         console.error('Error serving ticket:', error);
@@ -426,7 +468,7 @@ async function completeCurrent() {
             completedBy: currentAdmin.email
         });
 
-        showToast(`Completed: ${currentServingTicket.service} - Ticket ${currentServingTicket.ticketId}`, 'success');
+        showToast(`Completed: ${currentServingTicket.service} - Ticket ${currentServingTicket.ticketId} - ${currentServingTicket.customerName || 'Customer'}`, 'success');
         currentServingTicket = null;
         await loadLocationQueues();
 
@@ -467,7 +509,7 @@ async function markNoShow() {
             completedBy: currentAdmin.email
         });
 
-        showToast(`Marked as no-show: ${currentServingTicket.service} - Ticket ${currentServingTicket.ticketId}`, 'success');
+        showToast(`Marked as no-show: ${currentServingTicket.service} - Ticket ${currentServingTicket.ticketId} - ${currentServingTicket.customerName || 'Customer'}`, 'success');
         currentServingTicket = null;
         await loadLocationQueues();
 
