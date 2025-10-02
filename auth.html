@@ -215,7 +215,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
-    <!-- Embedded JavaScript to fix 404 errors -->
+    <!-- Embedded JavaScript with DASHBOARD REDIRECT -->
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -300,10 +300,11 @@
                     });
                 }
 
-                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
+                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting to dashboard...</div>';
                 
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
                 setTimeout(() => {
-                    window.location.href = 'map.html';
+                    window.location.href = 'user-dashboard.html';
                 }, 1000);
 
             } catch (error) {
@@ -350,10 +351,11 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                messageDiv.innerHTML = '<div class="alert alert-success">Registration successful! Redirecting...</div>';
+                messageDiv.innerHTML = '<div class="alert alert-success">Registration successful! Redirecting to dashboard...</div>';
                 
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
                 setTimeout(() => {
-                    window.location.href = 'map.html';
+                    window.location.href = 'user-dashboard.html';
                 }, 1000);
 
             } catch (error) {
@@ -402,10 +404,11 @@
                     });
                 }
 
-                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
+                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting to dashboard...</div>';
                 
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
                 setTimeout(() => {
-                    window.location.href = 'map.html';
+                    window.location.href = 'user-dashboard.html';
                 }, 1000);
 
             } catch (error) {
