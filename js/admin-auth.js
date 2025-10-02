@@ -138,11 +138,8 @@ function showMessage(message, type) {
     `;
 }
 
-// Auto-fill demo credentials for testing
-function fillDemoCredentials() {
-    document.getElementById('adminEmail').value = 'admin@queuemanager.com';
-    document.getElementById('adminPassword').value = 'admin123';
-}
+
+
 
 // Add this to admin-login.html as a convenience button
 function addDemoCredentialsButton() {
