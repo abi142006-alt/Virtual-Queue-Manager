@@ -3,20 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Queue - QueueManager</title>
+    <title>Find Locations in Madurai - QueueManager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        #map { 
+            height: 500px; 
+            border-radius: 10px;
+        }
+        .location-card { 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+        }
+        .location-card:hover { 
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        .category-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .hospital-badge { background-color: #dc3545; color: white; }
+        .bank-badge { background-color: #0d6efd; color: white; }
+        .cafe-badge { background-color: #198754; color: white; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="index.html">
-                <i class="fas fa-people-queue"></i> QueueManager
+                <i class="fas fa-people-queue"></i> QueueManager - Madurai
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="map.html">
-                    <i class="fas fa-map-marker-alt"></i> Find Locations
+                <a class="nav-link" href="track.html">
+                    <i class="fas fa-ticket-alt"></i> Track Queue
                 </a>
                 <a class="nav-link" href="myqueues.html">
                     <i class="fas fa-list"></i> My Queues
@@ -24,77 +46,139 @@
                 <a class="nav-link" href="#" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
+                <div class="navbar-nav ms-auto">
+    <a class="nav-link" href="user-dashboard.html">
+        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+    </a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">
-                            <i class="fas fa-ticket-alt"></i> Track Your Queue
-                        </h4>
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-map-marker-alt text-primary"></i> Find Locations in Madurai</h2>
+                <p class="text-muted">Discover hospitals, banks, and cafés across Madurai and join virtual queues</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter"></i> Filter Locations
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-4">
-                            <label class="form-label"><strong>Enter Ticket ID</strong></label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="all">All Categories</option>
+                                <option value="hospital">🏥 Hospitals & Clinics</option>
+                                <option value="bank">🏦 Banks & Financial</option>
+                                <option value="cafe">☕ Cafés & Restaurants</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Search Locations</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="ticketIdInput" 
-                                       placeholder="Enter your ticket ID (e.g., T123456)">
-                                <button class="btn btn-primary" onclick="trackTicket()">
-                                    <i class="fas fa-search"></i> Track
-                                </button>
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchLocation" placeholder="Search by name...">
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="text-center mb-4">
-                            <span class="text-muted">OR</span>
-                        </div>
-
-                        <div class="text-center">
-                            <button class="btn btn-outline-primary" onclick="loadMyTickets()">
-                                <i class="fas fa-user"></i> Show My Active Tickets
-                            </button>
-                        </div>
-
-                        <div id="queueInfo" class="mt-4" style="display: none;">
-                            <h5 class="mb-3">Queue Information</h5>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div id="ticketDetails"></div>
-                                    <div class="progress mt-3" style="height: 20px;">
-                                        <div id="queueProgress" class="progress-bar" 
-                                             role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                    <div id="queueStats" class="mt-2 text-center"></div>
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list"></i> Available Locations
+                            <span id="locationCount" class="badge bg-primary ms-2">0</span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="locationsList" class="list-group list-group-flush">
+                            <div class="text-center p-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading locations...</span>
                                 </div>
+                                <p class="mt-2 text-muted">Loading locations...</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div id="myTicketsSection" class="mt-4" style="display: none;">
-                            <h5 class="mb-3">My Active Tickets</h5>
-                            <div id="myTicketsList"></div>
-                        </div>
-
-                        <div id="noTicketsMessage" class="alert alert-info mt-4" style="display: none;">
-                            No active tickets found.
-                        </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marked-alt text-primary"></i> Madurai Map
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="map"></div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-body">
+                        <h6><i class="fas fa-info-circle text-info"></i> How to use:</h6>
+                        <ol class="mb-0">
+                            <li>Browse locations on the map or in the list</li>
+                            <li>Click on a location to see details</li>
+                            <li>Select a service and join the queue</li>
+                            <li>Track your queue status in real-time</li>
+                        </ol>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Location Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLocationName"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalLocationInfo"></div>
+                    <div class="mt-4">
+                        <label class="form-label fw-semibold">Select Service to Join Queue</label>
+                        <select class="form-select" id="serviceSelect"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="joinQueue()">
+                        <i class="fas fa-plus-circle me-1"></i> Join Queue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- App Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/track.js"></script>
+    <script src="js/map.js"></script>
 </body>
 </html>
