@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     auth.onAuthStateChanged((user) => {
         if (!user) {
             console.log('❌ No user logged in, redirecting to login...');
-            window.location.href = 'login.html';
+            window.location.href = 'auth.html';
             return;
         }
         
@@ -768,7 +768,7 @@ function showLoading(show) {
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
         auth.signOut().then(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'auth.html';
         }).catch(error => {
             console.error('Logout error:', error);
             showToast('Logout failed. Please try again.', 'error');
