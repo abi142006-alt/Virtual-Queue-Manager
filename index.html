@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueueManager - Virtual Queue System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --info: #4895ef;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .hero-section {
+            padding: 120px 0 80px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(67, 97, 238, 0.4);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+        }
+
+        .stat-card {
+            background: var(--gradient);
+            color: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: var(--dark);
+            text-decoration: none;
+            display: block;
+        }
+
+        .quick-action-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            color: var(--dark);
+            box-shadow: var(--shadow);
+        }
+
+        .queue-status {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-waiting { background: #fff3cd; color: #856404; }
+        .status-serving { background: #cce7ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-no-show { background: #f8d7da; color: #721c24; }
+
+        .progress {
+            height: 10px;
+            border-radius: 10px;
+            background: #e9ecef;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .nav-link {
+            color: var(--dark);
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .toast {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 100px 0 60px;
+            }
+            
+            .display-4 {
+                font-size: 2.5rem;
+            }
+            
+            .glass-card {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-people-queue me-2"></i>QueueManager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="auth.html" class="btn btn-primary">
+                    <i class="fas fa-rocket me-2"></i>Get Started
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 hero-content">
+                    <h1 class="display-4 fw-bold mb-4 fade-in-up">Skip the Wait, Save Your Time</h1>
+                    <p class="lead mb-5 fade-in-up" style="animation-delay: 0.2s;">
+                        Join virtual queues for hospitals, banks, and cafés. Save time and avoid crowded waiting areas with our smart queue management system.
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-3 justify-content-center fade-in-up" style="animation-delay: 0.4s;">
+                        <a href="auth.html" class="btn btn-primary btn-lg pulse">
+                            <i class="fas fa-rocket me-2"></i>Get Started Free
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-play-circle me-2"></i>How It Works
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5" style="background: rgba(248, 249, 250, 0.9);">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-12">
+                    <h2 class="fw-bold mb-3">How QueueManager Works</h2>
+                    <p class="text-muted">Simple steps to join virtual queues and save time</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="glass-card h-100 p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Find Location</h5>
+                        <p class="text-muted mb-4">Browse hospitals, banks, and cafés on our interactive map with real-time availability</p>
+                        <a href="map.html" class="btn btn-outline-primary">Explore Locations</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="glass-card h-100 p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Join Queue</h5>
+                        <p class="text-muted mb-4">Select your service and get a virtual ticket instantly with estimated wait times</p>
+                        <a href="map.html" class="btn btn-outline-primary">Join Queue</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="glass-card h-100 p-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Track & Notify</h5>
+                        <p class="text-muted mb-4">Monitor your queue position and get notified when it's your turn to be served</p>
+                        <a href="track.html" class="btn btn-outline-primary">Track Queue</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center mb-4">
+                <div class="col-12">
+                    <h3 class="fw-bold">Quick Access</h3>
+                    <p class="text-muted">Get started right away with these quick actions</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-3 col-6">
+                    <a href="map.html" class="quick-action-btn">
+                        <i class="fas fa-map-marked-alt fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Find Locations</h6>
+                        <small class="text-muted">Browse nearby services</small>
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="track.html" class="quick-action-btn">
+                        <i class="fas fa-ticket-alt fa-2x text-success mb-3"></i>
+                        <h6 class="fw-bold">Track Queue</h6>
+                        <small class="text-muted">Check your position</small>
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="myqueues.html" class="quick-action-btn">
+                        <i class="fas fa-list fa-2x text-info mb-3"></i>
+                        <h6 class="fw-bold">My Queues</h6>
+                        <small class="text-muted">View all tickets</small>
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="auth.html" class="quick-action-btn">
+                        <i class="fas fa-user fa-2x text-warning mb-3"></i>
+                        <h6 class="fw-bold">Sign In</h6>
+                        <small class="text-muted">Access account</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+
+    <!-- User Queues Section -->
+    <div id="myQueuesSection" class="py-5" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h3 class="fw-bold">Your Active Queues</h3>
+                    <p class="text-muted">Manage your current queue positions</p>
+                </div>
+            </div>
+            <div id="activeQueues" class="row g-4 justify-content-center"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-people-queue me-2"></i>QueueManager
+                    </h5>
+                    <p class="text-light">Revolutionizing the way you wait in queues. Save time, reduce stress, and enjoy a better waiting experience.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="map.html" class="text-light text-decoration-none">Find Locations</a></li>
+                        <li><a href="track.html" class="text-light text-decoration-none">Track Queue</a></li>
+                        <li><a href="myqueues.html" class="text-light text-decoration-none">My Queues</a></li>
+                        <li><a href="auth.html" class="text-light text-decoration-none">Sign In</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-3">Support</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Help Center</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Contact Us</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Privacy Policy</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2024 QueueManager. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <!-- App Scripts -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXvjL_U0g_U5hF8XcIWLpkwyh1PWMx03o",
+            authDomain: "virtual-queue-manager.firebaseapp.com",
+            projectId: "virtual-queue-manager",
+            storageBucket: "virtual-queue-manager.firebasestorage.app",
+            messagingSenderId: "50053786489",
+            appId: "1:50053786489:web:3dff3072decd2f174fdda8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Check auth state and show user queues if logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadUserQueues(user.uid);
+                updateNavigation(user);
+            }
+        });
+
+        async function loadUserQueues(userId) {
+            try {
+                const queuesSnapshot = await db.collection('queues')
+                    .where('userId', '==', userId)
+                    .where('status', 'in', ['waiting', 'serving'])
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                const queues = queuesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                if (queues.length > 0) {
+                    document.getElementById('myQueuesSection').style.display = 'block';
+                    const container = document.getElementById('activeQueues');
+                    container.innerHTML = queues.map(queue => `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="glass-card p-4 text-center">
+                                <div class="queue-status ${queue.status === 'waiting' ? 'status-waiting' : 'status-serving'} mb-3">
+                                    ${queue.status === 'waiting' ? '⏳ Waiting' : '👥 Serving'}
+                                </div>
+                                <h6 class="fw-bold">${queue.service}</h6>
+                                <p class="text-muted mb-2">${queue.locationName}</p>
+                                <p class="mb-3"><strong>Ticket:</strong> ${queue.ticketId}</p>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar ${queue.status === 'waiting' ? 'bg-warning' : 'bg-info'}" 
+                                         style="width: ${queue.status === 'waiting' ? '50%' : '80%'}"></div>
+                                </div>
+                                <a href="track.html?ticket=${queue.ticketId}" class="btn btn-primary btn-sm">
+                                    Track Queue
+                                </a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading user queues:', error);
+            }
+        }
+
+        function updateNavigation(user) {
+            const nav = document.querySelector('.navbar-nav');
+            if (nav) {
+                nav.innerHTML = `
+                    <a href="myqueues.html" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-list me-1"></i>My Queues
+                    </a>
+                    <a href="#" onclick="logout()" class="btn btn-primary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                `;
+            }
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.reload();
+            });
+        }
+
+        
+
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = value.toLocaleString() + '+';
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+    </script>
+</body>
+</html>

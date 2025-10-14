@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - QueueManager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .auth-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 1rem 2rem;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            background: transparent;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-people-queue me-2"></i>QueueManager
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-auto">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card card">
+                    <div class="card-body p-5">
+                        <!-- Header -->
+                        <div class="text-center mb-4">
+                            <div class="icon-circle">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h1 class="fw-bold">Welcome</h1>
+                        </div>
+
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs nav-justified mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" id="loginTab">Sign In</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" id="registerTab">Create Account</a>
+                            </li>
+                        </ul>
+
+                        <!-- Login Form -->
+                        <div id="loginForm">
+                            <form id="loginFormElement">
+                                <div class="mb-3">
+                                    <label for="loginEmail" class="form-label fw-semibold">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" class="form-control" id="loginEmail" 
+                                               placeholder="Enter your email" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="loginPassword" class="form-label fw-semibold">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-lock text-muted"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="loginPassword" 
+                                               placeholder="Enter your password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 py-3 mb-3">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                                </button>
+                            </form>
+                            
+                            <div class="text-center mb-4">
+                                <div class="position-relative">
+                                    <hr>
+                                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                                        or continue with
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-outline-danger w-100 py-3" onclick="googleLogin()">
+                                <i class="fab fa-google me-2"></i> Google
+                            </button>
+                        </div>
+
+                        <!-- Register Form -->
+                        <div id="registerForm" style="display: none;">
+                            <form id="registerFormElement">
+                                <div class="mb-3">
+                                    <label for="registerName" class="form-label fw-semibold">Full Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="registerName" 
+                                               placeholder="Enter your full name" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="registerEmail" class="form-label fw-semibold">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" class="form-control" id="registerEmail" 
+                                               placeholder="Enter your email" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="registerPassword" class="form-label fw-semibold">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-lock text-muted"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="registerPassword" 
+                                               placeholder="Choose a password (min. 6 characters)" required minlength="6">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 py-3">
+                                    <i class="fas fa-user-plus me-2"></i> Create Account
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Messages -->
+                        <div id="authMessage" class="mt-4"></div>
+
+                        <!-- Back to Home -->
+                        <div class="text-center mt-4">
+                            <a href="index.html" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-3 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 QueueManager. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <!-- Embedded JavaScript with DASHBOARD REDIRECT -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXvjL_U0g_U5hF8XcIWLpkwyh1PWMx03o",
+            authDomain: "virtual-queue-manager.firebaseapp.com",
+            projectId: "virtual-queue-manager",
+            storageBucket: "virtual-queue-manager.firebasestorage.app",
+            messagingSenderId: "50053786489",
+            appId: "1:50053786489:web:3dff3072decd2f174fdda8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+
+            if (loginTab && registerTab) {
+                loginTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    loginTab.classList.add('active');
+                    registerTab.classList.remove('active');
+                    loginForm.style.display = 'block';
+                    registerForm.style.display = 'none';
+                });
+
+                registerTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    registerTab.classList.add('active');
+                    loginTab.classList.remove('active');
+                    registerForm.style.display = 'block';
+                    loginForm.style.display = 'none';
+                });
+            }
+
+            // Login form handler
+            const loginFormElement = document.getElementById('loginFormElement');
+            if (loginFormElement) {
+                loginFormElement.addEventListener('submit', handleLogin);
+            }
+
+            // Register form handler
+            const registerFormElement = document.getElementById('registerFormElement');
+            if (registerFormElement) {
+                registerFormElement.addEventListener('submit', handleRegister);
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('authMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            submitBtn.disabled = true;
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Get user role from Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    // Create user document if it doesn't exist
+                    await db.collection('users').doc(user.uid).set({
+                        uid: user.uid,
+                        name: email.split('@')[0],
+                        email: email,
+                        role: 'customer',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting to dashboard...</div>';
+                
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
+                setTimeout(() => {
+                    window.location.href = 'user-dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'No account found with this email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password. Please try again.';
+                }
+                
+                messageDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const messageDiv = document.getElementById('authMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            submitBtn.disabled = true;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Store user data in Firestore
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    role: 'customer',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                messageDiv.innerHTML = '<div class="alert alert-success">Registration successful! Redirecting to dashboard...</div>';
+                
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
+                setTimeout(() => {
+                    window.location.href = 'user-dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'An account with this email already exists.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password should be at least 6 characters.';
+                }
+                
+                messageDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function googleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const messageDiv = document.getElementById('authMessage');
+            const googleBtn = document.querySelector('.btn-outline-danger');
+
+            // Show loading state
+            const originalText = googleBtn.innerHTML;
+            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            googleBtn.disabled = true;
+
+            try {
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+
+                // Check if user exists in Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    // Create new user document
+                    await db.collection('users').doc(user.uid).set({
+                        uid: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        role: 'customer',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                messageDiv.innerHTML = '<div class="alert alert-success">Login successful! Redirecting to dashboard...</div>';
+                
+                // REDIRECT TO DASHBOARD INSTEAD OF MAP
+                setTimeout(() => {
+                    window.location.href = 'user-dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Google login error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = 'Sign-in was cancelled.';
+                }
+                
+                messageDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+            } finally {
+                // Reset button state
+                googleBtn.innerHTML = originalText;
+                googleBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+
+

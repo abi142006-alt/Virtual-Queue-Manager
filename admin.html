@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - QueueManager</title>
+    <!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-people-queue"></i> QueueManager - Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="adminWelcome"></span>
+                <span class="navbar-text me-3 text-muted small" id="adminEmail"></span>
+                <a class="nav-link" href="#" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading Admin Dashboard...</p>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" style="display: none;">
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="waitingCount">0</h4>
+                                    <p class="mb-0">Waiting</p>
+                                </div>
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="servingCount">0</h4>
+                                    <p class="mb-0">Serving</p>
+                                </div>
+                                <i class="fas fa-user-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="completedCount">0</h4>
+                                    <p class="mb-0">Completed</p>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="noShowCount">0</h4>
+                                    <p class="mb-0">No Shows</p>
+                                </div>
+                                <i class="fas fa-times-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Queue Management -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tasks"></i> Queue Management
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Select Location</label>
+                                <select class="form-select" id="locationSelect" onchange="loadLocationQueues()">
+                                    <option value="">Loading locations...</option>
+                                </select>
+                            </div>
+                            
+                            <div id="currentQueueSection" style="display: none;">
+                                <h6>Current Queue</h6>
+                                <div id="currentQueueInfo" class="alert alert-info"></div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="callNext()">
+                                        <i class="fas fa-bullhorn"></i> Call Next
+                                    </button>
+                                    <button class="btn btn-warning" onclick="markNoShow()">
+                                        <i class="fas fa-user-times"></i> Mark as No-Show
+                                    </button>
+                                    <button class="btn btn-primary" onclick="completeCurrent()">
+                                        <i class="fas fa-check"></i> Complete Current
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="waitingList" class="mt-4">
+                                <h6>Waiting List</h6>
+                                <div id="waitingTicketsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar"></i> Analytics
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs" id="analyticsTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#ticketsChartTab">Tickets per Day</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#waitTimeChartTab">Average Wait Time</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#statusChartTab">Status Distribution</a>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content mt-3">
+                                <div class="tab-pane fade show active" id="ticketsChartTab">
+                                    <canvas id="ticketsChart" height="250"></canvas>
+                                </div>
+                                <div class="tab-pane fade" id="waitTimeChartTab">
+                                    <canvas id="waitTimeChart" height="250"></canvas>
+                                </div>
+                                <div class="tab-pane fade" id="statusChartTab">
+                                    <canvas id="statusChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/admin.js"></script>
+    <!-- Email Configuration -->
+<script src="js/email-config.js"></script>
+<script src="js/email-service.js"></script>
+</body>
+</html>

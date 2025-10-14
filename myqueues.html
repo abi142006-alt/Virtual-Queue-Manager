@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Queues - QueueManager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .queue-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+            transition: transform 0.2s ease;
+        }
+        .queue-card:hover {
+            transform: translateY(-2px);
+        }
+        .active-queue {
+            border-left: 6px solid #28a745;
+        }
+        .completed-queue {
+            border-left: 6px solid #6c757d;
+            opacity: 0.8;
+        }
+        .position-badge {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+            text-align: center;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+        .wait-time {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .section-title {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-people-queue me-2"></i>QueueManager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="map.html">
+                    <i class="fas fa-map-marker-alt me-1"></i>Find Locations
+                </a>
+                <a class="nav-link active" href="myqueues.html">
+                    <i class="fas fa-list me-1"></i>My Queues
+                </a>
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h2 fw-bold text-primary">
+                    <i class="fas fa-clock me-2"></i>My Queues
+                </h1>
+                <p class="text-muted">Manage your current queues and view queue history</p>
+            </div>
+        </div>
+
+        <!-- Active Queues Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h3 class="h5 fw-bold mb-0 section-title">
+                            <i class="fas fa-spinner text-warning me-2"></i>
+                            Active Queues
+                            <span id="activeCount" class="badge bg-warning ms-2">0</span>
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="activeQueuesList">
+                            <!-- Active queues will be loaded here -->
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h4 class="text-muted">No Active Queues</h4>
+                                <p class="text-muted">Join a queue from the map to see it here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue History Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h3 class="h5 fw-bold mb-0 section-title">
+                            <i class="fas fa-history text-secondary me-2"></i>
+                            Queue History
+                            <span id="historyCount" class="badge bg-secondary ms-2">0</span>
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="queueHistoryList">
+                            <!-- Queue history will be loaded here -->
+                            <div class="empty-state">
+                                <i class="fas fa-clipboard-list"></i>
+                                <h4 class="text-muted">No Queue History</h4>
+                                <p class="text-muted">Your completed queues will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center mt-4" style="display: none;">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading your queues...</p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/myqueues.js"></script>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
