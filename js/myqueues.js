@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
     auth.onAuthStateChanged((user) => {
         if (!user) {
-            window.location.href = 'login.html';
+            window.location.href = 'auth.html';
             return;
         }
         currentUser = user;
